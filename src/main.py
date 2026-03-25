@@ -4,8 +4,8 @@ import seaborn as sns
 
 def load_data():
     try:
-        df = pd.read_csv("data/sales_data.csv")  
-        df['order_date'] = pd.to_datetime(df['OrderDate'])  
+        df = pd.read_csv("sales_data.csv")
+        df['order_date'] = pd.to_datetime(df['OrderDate'])
     except Exception as e:
         print(f"加载数据失败: {e}")
         return None
@@ -14,13 +14,13 @@ def load_data():
 def preprocess_data(df):
     if df is None:
         return None
-    
-    df_clean = df[df['Status'] != 'Cancelled']  
-    
-    df_clean['Revenue'] = df_clean['Amount'] * 0.9  
-    
+
+    df_clean = df[df['Status'] != 'Cancelled'].copy()
+
+    df_clean['Revenue'] = df_clean['Amount'] * 0.9
+
     category_sales = df_clean.groupby('ProductCategory')['Revenue'].sum().reset_index()
-    
+
     return df_clean, category_sales
 
 def visualize_data(df_clean, category_sales):
@@ -34,7 +34,7 @@ def visualize_data(df_clean, category_sales):
     plt.title("Daily Sales Trend")
     
     plt.subplot(1, 3, 2)
-    category_sales.plot(kind='bar', x='ProductCategory', y='Revenue') 
+    plt.bar(category_sales['ProductCategory'], category_sales['Revenue'])
     plt.title("Sales by Category")
     
     plt.subplot(1, 3, 3)
