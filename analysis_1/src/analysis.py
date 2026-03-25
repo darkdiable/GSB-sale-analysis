@@ -5,12 +5,12 @@ from sklearn.metrics import mean_absolute_error
 import xgboost as xgb
 
 def prepare_features(df):
-    features = df[['store_id', 'product', 'region', 'area', 'employees', 'month']]
+    features = df[['store_id', 'product_encoded', 'region_encoded', 'area', 'employees', 'month']]
     target = df['sales']
     
-    X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
     
-    model = xgb.XGBRegressor(n_estimators=100, max_depth=3) 
+    model = xgb.XGBRegressor(n_estimators=100, max_depth=3, random_state=42) 
     model.fit(X_train, y_train)
     
     y_pred = model.predict(X_test)
