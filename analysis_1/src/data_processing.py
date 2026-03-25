@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
-from config import DATA_PATH
+import os
+
+DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
 
 def load_data():
-    df_sales = pd.read_csv('data/sales_data.csv')
-    df_store = pd.read_csv('data/store_info.csv')
+    df_sales = pd.read_csv(os.path.join(DATA_PATH, 'sales_data.csv'))
+    df_store = pd.read_csv(os.path.join(DATA_PATH, 'store_info.csv'))
     return df_sales, df_store
 
 def clean_data(df_sales, df_store):
