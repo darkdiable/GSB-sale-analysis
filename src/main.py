@@ -1,10 +1,13 @@
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 def load_data():
     try:
-        df = pd.read_csv("data/sales_data.csv")  
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        data_path = os.path.join(script_dir, "..", "sales_data.csv")
+        df = pd.read_csv(data_path)  
         df['order_date'] = pd.to_datetime(df['OrderDate'])  
     except Exception as e:
         print(f"加载数据失败: {e}")
@@ -15,7 +18,7 @@ def preprocess_data(df):
     if df is None:
         return None
     
-    df_clean = df[df['Status'] != 'Cancelled']  
+    df_clean = df[df['Status'] != 'Cancelled'].copy()  
     
     df_clean['Revenue'] = df_clean['Amount'] * 0.9  
     
