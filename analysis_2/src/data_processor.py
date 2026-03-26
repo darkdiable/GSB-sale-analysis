@@ -41,6 +41,7 @@ class DataProcessor:
             '总利润': self.df['利润'].sum(),
             '平均订单金额': self.df['销售额'].mean(),
             '总订单数': len(self.df),
+            '总数量': self.df['数量'].sum(),
             '总销售数量': self.df['数量'].sum(),
             '平均客单价': self.df.groupby('客户ID')['销售额'].sum().mean()
         }
