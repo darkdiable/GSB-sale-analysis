@@ -1,17 +1,43 @@
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
 from datetime import datetime
 import os
+import matplotlib.font_manager as fm
+import platform
+import warnings
+
+warnings.filterwarnings('ignore', category=UserWarning)
+
+
+def setup_chinese_font():
+    if platform.system() == 'Darwin':
+        font_list = ['STHeiti', 'Heiti TC', 'PingFang HK', 'Arial Unicode MS']
+        for font_name in font_list:
+            try:
+                plt.rcParams['font.sans-serif'] = [font_name]
+                plt.rcParams['axes.unicode_minus'] = False
+                fig, ax = plt.subplots()
+                ax.text(0.5, 0.5, '测试中文')
+                plt.close(fig)
+                return
+            except:
+                continue
+    else:
+        plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'WenQuanYi Micro Hei']
+    plt.rcParams['axes.unicode_minus'] = False
+
+
+setup_chinese_font()
 
 
 class Visualizer:
     def __init__(self, output_dir='output'):
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
-        plt.rcParams['font.sans-serif'] = ['SimHei']
-        plt.rcParams['axes.unicode_minus'] = False
         sns.set_style('whitegrid')
 
     def plot_category_sales(self, category_stats, save_name='category_sales.png'):
