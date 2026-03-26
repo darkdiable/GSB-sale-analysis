@@ -7,10 +7,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from src.data_processor import DataProcessor
 from src.visualizer import Visualizer
 from src.report_generator import ReportGenerator
-from utils.data_generator import SalesDataGenerator
 
 
 def check_data_file(data_path):
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"数据文件不存在: {data_path}")
+    print(f"数据文件检查通过: {data_path}")
+
 
 def main():
     print("=" * 60)

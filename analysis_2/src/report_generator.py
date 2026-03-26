@@ -26,7 +26,7 @@ class ReportGenerator:
         report.append(f"总利润：¥{metrics['总利润']:,.2f}")
         report.append(f"平均订单金额：¥{metrics['平均订单金额']:,.2f}")
         report.append(f"总订单数：{metrics['总订单数']:,}")
-        report.append(f"总销售数量：{metrics['总数量']:,}")
+        report.append(f"总销售数量：{metrics['总销售数量']:,}")
         report.append(f"平均客单价：¥{metrics['平均客单价']:,.2f}")
 
         if growth_rate:
