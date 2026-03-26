@@ -199,6 +199,7 @@ class DataProcessor:
         return matrix
 
     def get_time_category_trend(self):
+        """获取各类别随时间的销售趋势"""
         if self.df is None:
             raise ValueError("请先加载数据")
 
@@ -210,6 +211,6 @@ class DataProcessor:
             columns='类别',
             aggfunc='sum',
             fill_value=0
-        )
+        ).round(2)
 
         return trend
