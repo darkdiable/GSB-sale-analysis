@@ -26,6 +26,10 @@ class DataAnalyzer:
             brand_analysis['revenue_sum'] / brand_analysis['quantity_sum']
         )
         
+        brand_analysis['market_share'] = (
+            brand_analysis['revenue_sum'] / brand_analysis['revenue_sum'].sum() * 100
+        )
+        
         brand_analysis['performance_score'] = (
             brand_analysis['revenue_sum'].rank(pct=True) * 0.4 +
             brand_analysis['quantity_sum'].rank(pct=True) * 0.3 +
