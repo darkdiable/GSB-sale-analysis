@@ -4,10 +4,11 @@ from datetime import datetime
 
 
 class DataProcessor:
-    def __init__(self, sales_df, customer_df=None, dealer_df=None):
+    def __init__(self, sales_df, customer_df=None, dealer_df=None, salesperson_df=None):
         self.sales_df = sales_df.copy()
         self.customer_df = customer_df.copy() if customer_df is not None else None
         self.dealer_df = dealer_df.copy() if dealer_df is not None else None
+        self.salesperson_df = salesperson_df.copy() if salesperson_df is not None else None
         
     def clean_data(self):
         self.sales_df = self.sales_df.drop_duplicates()
@@ -23,29 +24,36 @@ class DataProcessor:
         if self.customer_df is None:
             return self.sales_df
         
-        self.sales_df['customer_id'] = self.sales_df['salesperson_id'].apply(
-            lambda x: f"CUST{x.split('SP')[1]}" if 'SP' in x else None
-        )
+        region_customers = self.customer_df.groupby('region').agg({
+            'customer_id': 'count',
+            'membership_level': lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else 'N/A'
+        }).reset_index()
+        region_customers.columns = ['region', 'customer_count', 'dominant_membership']
         
         merged_df = pd.merge(
             self.sales_df,
-            self.customer_df,
-            on='customer_id',
+            region_customers,
+            on='region',
             how='left'
         )
         
         return merged_df
     
     def merge_dealer_data(self):
-        if self.dealer_df is None:
+        if self.dealer_df is None or self.salesperson_df is None:
             return self.sales_df
         
-        self.sales_df['dealer_id'] = self.sales_df['region'].apply(
-            lambda x: f"DLR{self.dealer_df[self.dealer_df['region'] == x].iloc[0]['dealer_id'].replace('DLR', '')}"
-        )
+        salesperson_dealer = self.salesperson_df[['salesperson_id', 'dealer_id']].drop_duplicates()
         
         merged_df = pd.merge(
             self.sales_df,
+            salesperson_dealer,
+            on='salesperson_id',
+            how='left'
+        )
+        
+        merged_df = pd.merge(
+            merged_df,
             self.dealer_df,
             on='dealer_id',
             how='left'

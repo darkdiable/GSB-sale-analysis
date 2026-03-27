@@ -3,7 +3,6 @@ import sys
 from datetime import datetime
 import pandas as pd
 
-from src.data_generator import CarSalesDataGenerator
 from src.data_processor import DataProcessor
 from src.data_analyzer import DataAnalyzer
 from src.visualizer import SalesVisualizer
@@ -20,8 +19,19 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(data_dir, exist_ok=True)
     
-    print("\n[1/6] Processing data...")
-    processor = DataProcessor(sales_df, customer_df, dealer_df)
+    print("\n[1/6] Loading data...")
+    sales_df = pd.read_csv(f"{data_dir}/sales_data.csv")
+    customer_df = pd.read_csv(f"{data_dir}/customer_data.csv")
+    dealer_df = pd.read_csv(f"{data_dir}/dealer_data.csv")
+    salesperson_df = pd.read_csv(f"{data_dir}/salesperson_data.csv")
+    
+    print(f"Sales data loaded: {sales_df.shape[0]} records")
+    print(f"Customer data loaded: {customer_df.shape[0]} records")
+    print(f"Dealer data loaded: {dealer_df.shape[0]} records")
+    print(f"Salesperson data loaded: {salesperson_df.shape[0]} records")
+    
+    print("\n[2/6] Processing data...")
+    processor = DataProcessor(sales_df, customer_df, dealer_df, salesperson_df)
     
     cleaned_df = processor.clean_data()
     print(f"Cleaned data shape: {cleaned_df.shape}")
@@ -39,7 +49,7 @@ def main():
     region_stats = processor.aggregate_by_region(df_with_features)
     time_stats = processor.aggregate_by_time(df_with_features, freq='M')
     
-    print("\n[2/6] Analyzing data...")
+    print("\n[3/6] Analyzing data...")
     analyzer = DataAnalyzer(df_with_features)
     
     brand_performance = analyzer.brand_performance_analysis()
@@ -71,7 +81,7 @@ def main():
     print("\nTop 10 Salespersons:")
     print(salesperson_perf.head(10))
     
-    print("\n[3/6] Creating visualizations...")
+    print("\n[4/6] Creating visualizations...")
     visualizer = SalesVisualizer(df_with_features, style='seaborn-v0_8')
     
     print("Generating brand comparison chart...")
@@ -98,8 +108,8 @@ def main():
     print("Creating full dashboard...")
     visualizer.create_dashboard(save_path=f"{output_dir}/full_dashboard.png")
     
-    print("\n[4/6] Generating summary report...")
-    generate_summary_report(metrics, brand_stats, region_stats, output_dir)
+    print("\n[5/6] Generating summary report...")
+    generate_summary_report(metrics, brand_performance, regional_analysis, output_dir)
     
     print("\n[5/6] Analysis complete!")
     print(f"Results saved to: {os.path.abspath(output_dir)}")
@@ -137,7 +147,7 @@ def generate_summary_report(metrics, brand_stats, region_stats, output_dir):
     report.append("REGIONAL PERFORMANCE")
     report.append("-" * 40)
     for idx, row in region_stats.iterrows():
-        report.append(f"{row['region']}: Revenue=${row['revenue_sum']:,.2f}, "
+        report.append(f"{row['region']}: Revenue=${row['total_revenue']:,.2f}, "
                      f"Contribution={row['revenue_contribution']:.2f}%")
     report.append("")
     
