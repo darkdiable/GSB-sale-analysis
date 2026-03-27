@@ -32,6 +32,10 @@ class DataAnalyzer:
             (1 - brand_analysis['discount_mean'].rank(pct=True)) * 0.3
         ) * 100
         
+        brand_analysis['market_share'] = (
+            brand_analysis['revenue_sum'] / brand_analysis['revenue_sum'].sum() * 100
+        )
+        
         return brand_analysis.sort_values('performance_score', ascending=False)
     
     def regional_analysis(self):
@@ -43,12 +47,12 @@ class DataAnalyzer:
         })
         
         regional_stats.columns = ['total_quantity', 'avg_quantity', 
-                                 'total_revenue', 'avg_revenue',
+                                 'revenue_sum', 'avg_revenue',
                                  'brand_count', 'salesperson_count']
         regional_stats = regional_stats.reset_index()
         
         regional_stats['revenue_contribution'] = (
-            regional_stats['total_revenue'] / regional_stats['total_revenue'].sum() * 100
+            regional_stats['revenue_sum'] / regional_stats['revenue_sum'].sum() * 100
         )
         
         return regional_stats

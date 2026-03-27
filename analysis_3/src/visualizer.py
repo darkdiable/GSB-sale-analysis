@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')  # Non-interactive backend for headless environments
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -32,7 +34,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_time_series(self, metric='revenue', freq='M', save_path=None):
         df = self.df.copy()
@@ -61,7 +63,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_regional_heatmap(self, metric='revenue', save_path=None):
         regional_data = self.df.pivot_table(
@@ -84,7 +86,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_distribution(self, column='final_price', save_path=None):
         plt.figure(figsize=(10, 6))
@@ -100,7 +102,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_brand_market_share(self, save_path=None):
         brand_revenue = self.df.groupby('brand')['revenue'].sum()
@@ -117,7 +119,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_quantity_vs_price(self, save_path=None):
         plt.figure(figsize=(10, 8))
@@ -138,7 +140,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_monthly_performance(self, save_path=None):
         df = self.df.copy()
@@ -175,7 +177,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_top_salespersons(self, top_n=20, metric='revenue', save_path=None):
         salesperson_data = self.df.groupby('salesperson_id')[metric].sum().sort_values(ascending=False)
@@ -198,7 +200,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_correlation_matrix(self, save_path=None):
         numeric_cols = self.df.select_dtypes(include=[np.number]).columns
@@ -216,7 +218,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def create_dashboard(self, save_path=None):
         fig = plt.figure(figsize=(20, 16))
@@ -264,4 +266,4 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
