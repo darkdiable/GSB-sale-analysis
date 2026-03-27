@@ -3,7 +3,6 @@ import sys
 from datetime import datetime
 import pandas as pd
 
-from src.data_generator import CarSalesDataGenerator
 from src.data_processor import DataProcessor
 from src.data_analyzer import DataAnalyzer
 from src.visualizer import SalesVisualizer
@@ -20,7 +19,20 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(data_dir, exist_ok=True)
     
-    print("\n[1/6] Processing data...")
+    print("\n[1/6] Loading and processing data...")
+    
+    # Load data from CSV files
+    try:
+        sales_df = pd.read_csv(f"{data_dir}/sales_data.csv")
+        customer_df = pd.read_csv(f"{data_dir}/customer_data.csv")
+        dealer_df = pd.read_csv(f"{data_dir}/dealer_data.csv")
+        print(f"Loaded {len(sales_df)} sales records")
+        print(f"Loaded {len(customer_df)} customer records")
+        print(f"Loaded {len(dealer_df)} dealer records")
+    except Exception as e:
+        print(f"Error loading data: {e}")
+        return None
+    
     processor = DataProcessor(sales_df, customer_df, dealer_df)
     
     cleaned_df = processor.clean_data()
@@ -99,7 +111,7 @@ def main():
     visualizer.create_dashboard(save_path=f"{output_dir}/full_dashboard.png")
     
     print("\n[4/6] Generating summary report...")
-    generate_summary_report(metrics, brand_stats, region_stats, output_dir)
+    generate_summary_report(metrics, brand_performance, regional_analysis, output_dir)
     
     print("\n[5/6] Analysis complete!")
     print(f"Results saved to: {os.path.abspath(output_dir)}")
