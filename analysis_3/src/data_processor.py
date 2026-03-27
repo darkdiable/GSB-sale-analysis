@@ -40,15 +40,12 @@ class DataProcessor:
         if self.dealer_df is None:
             return self.sales_df
         
-        self.sales_df['dealer_id'] = self.sales_df['region'].apply(
-            lambda x: f"DLR{self.dealer_df[self.dealer_df['region'] == x].iloc[0]['dealer_id'].replace('DLR', '')}"
-        )
-        
         merged_df = pd.merge(
             self.sales_df,
             self.dealer_df,
-            on='dealer_id',
-            how='left'
+            on='region',
+            how='left',
+            suffixes=('', '_dealer')
         )
         
         return merged_df
@@ -57,6 +54,7 @@ class DataProcessor:
         if df is None:
             df = self.sales_df
         
+        df = df.copy()
         df['date'] = pd.to_datetime(df['date'])
         
         df['year'] = df['date'].dt.year
@@ -118,6 +116,8 @@ class DataProcessor:
         
         region_stats.columns = ['_'.join(col).strip() for col in region_stats.columns.values]
         region_stats = region_stats.reset_index()
+        
+        region_stats['revenue_contribution'] = region_stats['revenue_sum'] / region_stats['revenue_sum'].sum() * 100
         
         return region_stats
     
