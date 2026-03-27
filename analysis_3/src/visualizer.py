@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -8,14 +10,17 @@ from datetime import datetime
 class SalesVisualizer:
     def __init__(self, df, style='seaborn-v0_8'):
         self.df = df.copy()
-        plt.style.use(style)
+        try:
+            plt.style.use(style)
+        except:
+            plt.style.use('default')
         self.color_palette = sns.color_palette("husl", 10)
         
     def plot_brand_comparison(self, metric='revenue', top_n=10, save_path=None):
-        brand_data = self.df.groupby('brand')[metric].sum().sort_values(ascending=False)
+        brand_data = self.df.groupby('brand')[metric].sum().sort_values(ascending=False).head(top_n)
         
         plt.figure(figsize=(14, 7))
-        bars = plt.bar(range(len(brand_data)), brand_data.values, color=self.color_palette)
+        bars = plt.bar(range(len(brand_data)), brand_data.values, color=self.color_palette[:len(brand_data)])
         
         plt.xticks(range(len(brand_data)), brand_data.index, rotation=45)
         plt.xlabel('Brand')
@@ -32,7 +37,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_time_series(self, metric='revenue', freq='M', save_path=None):
         df = self.df.copy()
@@ -61,7 +66,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_regional_heatmap(self, metric='revenue', save_path=None):
         regional_data = self.df.pivot_table(
@@ -84,7 +89,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_distribution(self, column='final_price', save_path=None):
         plt.figure(figsize=(10, 6))
@@ -100,14 +105,14 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_brand_market_share(self, save_path=None):
         brand_revenue = self.df.groupby('brand')['revenue'].sum()
         
         plt.figure(figsize=(10, 10))
         plt.pie(brand_revenue.values, labels=brand_revenue.index, autopct='%1.1f%%',
-               colors=self.color_palette, startangle=90)
+               colors=self.color_palette[:len(brand_revenue)], startangle=90)
         
         plt.title('Market Share by Brand')
         plt.axis('equal')
@@ -117,7 +122,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_quantity_vs_price(self, save_path=None):
         plt.figure(figsize=(10, 8))
@@ -138,7 +143,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_monthly_performance(self, save_path=None):
         df = self.df.copy()
@@ -175,15 +180,18 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_top_salespersons(self, top_n=20, metric='revenue', save_path=None):
         salesperson_data = self.df.groupby('salesperson_id')[metric].sum().sort_values(ascending=False)
         
         plt.figure(figsize=(14, 7))
-        bars = plt.bar(range(top_n), salesperson_data.head(top_n).values, color=self.color_palette)
+        bars = plt.bar(range(min(top_n, len(salesperson_data))), 
+                      salesperson_data.head(top_n).values, 
+                      color=self.color_palette[:min(top_n, len(salesperson_data))])
         
-        plt.xticks(range(top_n), salesperson_data.head(top_n).index, rotation=45)
+        plt.xticks(range(min(top_n, len(salesperson_data))), 
+                  salesperson_data.head(top_n).index, rotation=45)
         plt.xlabel('Salesperson ID')
         plt.ylabel(f'Total {metric}')
         plt.title(f'Top {top_n} Salespersons by {metric}')
@@ -198,7 +206,7 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_correlation_matrix(self, save_path=None):
         numeric_cols = self.df.select_dtypes(include=[np.number]).columns
@@ -216,14 +224,14 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def create_dashboard(self, save_path=None):
         fig = plt.figure(figsize=(20, 16))
         
         ax1 = plt.subplot(2, 3, 1)
         brand_data = self.df.groupby('brand')['revenue'].sum().sort_values(ascending=False).head(10)
-        ax1.bar(range(len(brand_data)), brand_data.values, color=self.color_palette)
+        ax1.bar(range(len(brand_data)), brand_data.values, color=self.color_palette[:len(brand_data)])
         ax1.set_xticks(range(len(brand_data)))
         ax1.set_xticklabels(brand_data.index, rotation=45)
         ax1.set_title('Top 10 Brands by Revenue')
@@ -235,6 +243,7 @@ class SalesVisualizer:
         monthly_revenue = df.groupby('month')['revenue'].sum()
         ax2.plot(monthly_revenue.index, monthly_revenue.values, marker='o')
         ax2.set_title('Monthly Revenue Trend')
+        ax2.grid(True, alpha=0.3)
         
         ax3 = plt.subplot(2, 3, 3)
         regional_data = self.df.groupby('region')['revenue'].sum()
@@ -264,4 +273,4 @@ class SalesVisualizer:
         if save_path:
             plt.savefig(save_path, dpi=300, bbox_inches='tight')
         
-        plt.show()
+        plt.close()

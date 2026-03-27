@@ -3,7 +3,6 @@ import sys
 from datetime import datetime
 import pandas as pd
 
-from src.data_generator import CarSalesDataGenerator
 from src.data_processor import DataProcessor
 from src.data_analyzer import DataAnalyzer
 from src.visualizer import SalesVisualizer
@@ -19,6 +18,17 @@ def main():
     
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(data_dir, exist_ok=True)
+    
+    print("\n[0/6] Loading data...")
+    sales_df = pd.read_csv(f"{data_dir}/sales_data.csv")
+    customer_df = pd.read_csv(f"{data_dir}/customer_data.csv")
+    dealer_df = pd.read_csv(f"{data_dir}/dealer_data.csv")
+    salesperson_df = pd.read_csv(f"{data_dir}/salesperson_data.csv")
+    
+    print(f"Sales data shape: {sales_df.shape}")
+    print(f"Customer data shape: {customer_df.shape}")
+    print(f"Dealer data shape: {dealer_df.shape}")
+    print(f"Salesperson data shape: {salesperson_df.shape}")
     
     print("\n[1/6] Processing data...")
     processor = DataProcessor(sales_df, customer_df, dealer_df)
@@ -40,7 +50,7 @@ def main():
     time_stats = processor.aggregate_by_time(df_with_features, freq='M')
     
     print("\n[2/6] Analyzing data...")
-    analyzer = DataAnalyzer(df_with_features)
+    analyzer = DataAnalyzer(df_with_features, salesperson_df)
     
     brand_performance = analyzer.brand_performance_analysis()
     print("\nBrand Performance Analysis:")
@@ -129,16 +139,16 @@ def generate_summary_report(metrics, brand_stats, region_stats, output_dir):
     report.append("TOP 5 BRANDS BY PERFORMANCE")
     report.append("-" * 40)
     for idx, row in brand_stats.head(5).iterrows():
-        report.append(f"{row['brand']}: Score={row['performance_score']:.2f}, "
-                     f"Revenue=${row['revenue_sum']:,.2f}, "
-                     f"Market Share={row['market_share']:.2f}%")
+        report.append(f"{row['brand']}: Score={row.get('performance_score', 0):.2f}, "
+                     f"Revenue=${row.get('revenue_sum', 0):,.2f}, "
+                     f"Market Share={row.get('market_share', 0):.2f}%")
     report.append("")
     
     report.append("REGIONAL PERFORMANCE")
     report.append("-" * 40)
     for idx, row in region_stats.iterrows():
-        report.append(f"{row['region']}: Revenue=${row['revenue_sum']:,.2f}, "
-                     f"Contribution={row['revenue_contribution']:.2f}%")
+        report.append(f"{row['region']}: Revenue=${row.get('revenue_sum', row.get('total_revenue', 0)):,.2f}, "
+                     f"Contribution={row.get('revenue_contribution', 0):.2f}%")
     report.append("")
     
     report.append("=" * 60)

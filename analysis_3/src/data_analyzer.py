@@ -7,8 +7,9 @@ from scipy import stats
 
 
 class DataAnalyzer:
-    def __init__(self, df):
+    def __init__(self, df, salesperson_df=None):
         self.df = df.copy()
+        self.salesperson_df = salesperson_df.copy() if salesperson_df is not None else None
         self.label_encoders = {}
         
     def brand_performance_analysis(self):
@@ -131,7 +132,7 @@ class DataAnalyzer:
         
         features = (features - features.mean()) / features.std()
         
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
         df['segment'] = kmeans.fit_predict(features)
         
         segment_profile = df.groupby('segment').agg({
@@ -144,7 +145,7 @@ class DataAnalyzer:
         return df, segment_profile
     
     def salesperson_performance(self):
-        salesperson_stats = self.df.groupby('salesperson_id').agg({
+        sales_stats = self.df.groupby('salesperson_id').agg({
             'quantity': ['sum', 'mean', 'count'],
             'revenue': ['sum', 'mean'],
             'discount': 'mean',
@@ -152,10 +153,20 @@ class DataAnalyzer:
             'region': lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else 'N/A'
         })
         
-        salesperson_stats.columns = ['total_quantity', 'avg_quantity', 'sales_count',
-                                    'total_revenue', 'avg_revenue',
-                                    'avg_discount', 'brands_sold', 'primary_region']
-        salesperson_stats = salesperson_stats.reset_index()
+        sales_stats.columns = ['total_quantity', 'avg_quantity', 'sales_count',
+                              'total_revenue', 'avg_revenue',
+                              'avg_discount', 'brands_sold', 'primary_region']
+        sales_stats = sales_stats.reset_index()
+        
+        if self.salesperson_df is not None:
+            salesperson_stats = pd.merge(
+                sales_stats,
+                self.salesperson_df[['salesperson_id', 'first_name', 'last_name', 'position']],
+                on='salesperson_id',
+                how='left'
+            )
+        else:
+            salesperson_stats = sales_stats
         
         salesperson_stats['performance_rank'] = salesperson_stats['total_revenue'].rank(
             ascending=False, method='min'
@@ -163,7 +174,7 @@ class DataAnalyzer:
         
         salesperson_stats['efficiency_score'] = (
             salesperson_stats['total_revenue'] / salesperson_stats['sales_count']
-        ) / salesperson_stats['avg_discount']
+        ) / (salesperson_stats['avg_discount'] + 0.01)
         
         return salesperson_stats.sort_values('performance_rank')
     
@@ -193,9 +204,8 @@ class DataAnalyzer:
     
     def statistical_summary(self, group_by='brand'):
         summary = self.df.groupby(group_by).agg({
-            'quantity': [stats.describe, lambda x: stats.skew(x)],
+            'quantity': [lambda x: stats.describe(x), lambda x: stats.skew(x)],
             'revenue': [lambda x: stats.kurtosis(x), 'std'],
             'discount': ['mean', 'std']
         })
-        
         return summary
