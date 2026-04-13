@@ -12,7 +12,7 @@ def plot_sales_trend(df):
     plt.show()
 
 def plot_feature_importance(model):
-    importances = model.coef_  
+    importances = model.feature_importances_  
     
     plt.bar(range(len(importances)), importances)
     plt.title('Feature Importance')
