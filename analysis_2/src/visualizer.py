@@ -10,7 +10,9 @@ class Visualizer:
     def __init__(self, output_dir='output'):
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
-        plt.rcParams['font.sans-serif'] = ['SimHei']
+        import matplotlib
+        matplotlib.use('Agg')
+        plt.rcParams['font.sans-serif'] = ['Arial Unicode MS', 'PingFang SC', 'Heiti SC', 'SimHei', 'DejaVu Sans']
         plt.rcParams['axes.unicode_minus'] = False
         sns.set_style('whitegrid')
 
