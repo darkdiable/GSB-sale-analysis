@@ -14,8 +14,11 @@ class SalesVisualizer:
     def plot_brand_comparison(self, metric='revenue', top_n=10, save_path=None):
         brand_data = self.df.groupby('brand')[metric].sum().sort_values(ascending=False)
         
+        if len(brand_data) > top_n:
+            brand_data = brand_data.head(top_n)
+        
         plt.figure(figsize=(14, 7))
-        bars = plt.bar(range(len(brand_data)), brand_data.values, color=self.color_palette)
+        bars = plt.bar(range(len(brand_data)), brand_data.values, color=self.color_palette[:len(brand_data)])
         
         plt.xticks(range(len(brand_data)), brand_data.index, rotation=45)
         plt.xlabel('Brand')
@@ -71,8 +74,10 @@ class SalesVisualizer:
             aggfunc='sum'
         )
         
+        regional_data_normalized = (regional_data - regional_data.mean()) / regional_data.std()
+        
         plt.figure(figsize=(12, 10))
-        sns.heatmap(regional_data, annot=True, fmt='.0f', cmap='YlOrRd', 
+        sns.heatmap(regional_data_normalized, annot=True, fmt='.2f', cmap='YlOrRd', 
                    linewidths=.5, cbar_kws={"shrink": .5})
         
         plt.title(f'Regional Sales Heatmap by Brand ({metric})')

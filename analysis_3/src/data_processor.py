@@ -5,9 +5,9 @@ from datetime import datetime
 
 class DataProcessor:
     def __init__(self, sales_df, customer_df=None, dealer_df=None):
-        self.sales_df = sales_df.copy()
-        self.customer_df = customer_df.copy() if customer_df is not None else None
-        self.dealer_df = dealer_df.copy() if dealer_df is not None else None
+        self.sales_df = sales_df
+        self.customer_df = customer_df if customer_df is not None else None
+        self.dealer_df = dealer_df if dealer_df is not None else None
         
     def clean_data(self):
         self.sales_df = self.sales_df.drop_duplicates()
@@ -56,6 +56,8 @@ class DataProcessor:
     def add_time_features(self, df=None):
         if df is None:
             df = self.sales_df
+        else:
+            df = df.copy()
         
         df['date'] = pd.to_datetime(df['date'])
         

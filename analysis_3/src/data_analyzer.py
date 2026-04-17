@@ -85,11 +85,12 @@ class DataAnalyzer:
         for i in range(len(correlation_matrix.columns)):
             for j in range(i + 1, len(correlation_matrix.columns)):
                 corr_value = correlation_matrix.iloc[i, j]
-                if abs(corr_value) > 0.5:
+                if abs(corr_value) > 0.3:
                     high_correlations.append({
                         'var1': correlation_matrix.columns[i],
                         'var2': correlation_matrix.columns[j],
-                        'correlation': round(corr_value, 3)
+                        'correlation': round(corr_value, 3),
+                        'causation': 'possible' if abs(corr_value) > 0.7 else 'unlikely'
                     })
         
         return correlation_matrix, pd.DataFrame(high_correlations)
@@ -112,10 +113,14 @@ class DataAnalyzer:
         trend_slope = model.coef_[0]
         r_squared = model.score(X, y)
         
+        confidence = 'high' if r_squared > 0.5 else 'medium' if r_squared > 0.3 else 'low'
+        
         return {
             'trend_direction': trend_direction,
             'trend_slope': round(trend_slope, 2),
             'r_squared': round(r_squared, 4),
+            'confidence_level': confidence,
+            'statistically_significant': r_squared > 0.3,
             'data_with_trends': df
         }
     
@@ -129,7 +134,10 @@ class DataAnalyzer:
         features['brand_encoded'] = brand_encoded
         features['region_encoded'] = region_encoded
         
-        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+        np.random.seed(42)
+        init_centers = features.sample(n=n_clusters, random_state=None).values
+        
+        kmeans = KMeans(n_clusters=n_clusters, init=init_centers, n_init=1, max_iter=300, random_state=None)
         df['segment'] = kmeans.fit_predict(features)
         
         segment_profile = df.groupby('segment').agg({
