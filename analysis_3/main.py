@@ -43,10 +43,6 @@ def main():
     print(f"Total Revenue: ${metrics['total_revenue']:,.2f}")
     print(f"Total Quantity Sold: {metrics['total_quantity']:,}")
     
-    brand_stats = processor.aggregate_by_brand(df_with_features)
-    region_stats = processor.aggregate_by_region(df_with_features)
-    time_stats = processor.aggregate_by_time(df_with_features, freq='M')
-    
     print("\n[2/6] Analyzing data...")
     analyzer = DataAnalyzer(df_with_features)
     
@@ -55,6 +51,9 @@ def main():
     print(brand_performance.head(10))
     
     regional_analysis = analyzer.regional_analysis()
+    
+    brand_stats = brand_performance
+    region_stats = regional_analysis
     print("\nRegional Analysis:")
     print(regional_analysis)
     
@@ -137,14 +136,15 @@ def generate_summary_report(metrics, brand_stats, region_stats, output_dir):
     report.append("TOP 5 BRANDS BY PERFORMANCE")
     report.append("-" * 40)
     for idx, row in brand_stats.head(5).iterrows():
+        market_share = row['revenue_sum'] / brand_stats['revenue_sum'].sum() * 100
         report.append(f"{row['brand']}: Revenue=${row['revenue_sum']:,.2f}, "
-                     f"Market Share={row['market_share']:.2f}%")
+                     f"Market Share={market_share:.2f}%")
     report.append("")
     
     report.append("REGIONAL PERFORMANCE")
     report.append("-" * 40)
     for idx, row in region_stats.iterrows():
-        report.append(f"{row['region']}: Revenue=${row['revenue_sum']:,.2f}")
+        report.append(f"{row['region']}: Revenue=${row['total_revenue']:,.2f}")
     report.append("")
     
     report.append("=" * 60)

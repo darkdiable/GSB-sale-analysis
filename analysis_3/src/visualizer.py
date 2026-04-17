@@ -35,9 +35,9 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_time_series(self, metric='revenue', freq='M', save_path=None):
         df = self.df.copy()
@@ -71,9 +71,9 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_regional_heatmap(self, metric='revenue', save_path=None):
         regional_data = self.df.pivot_table(
@@ -83,11 +83,9 @@ class SalesVisualizer:
             aggfunc='sum'
         )
         
-        regional_data_normalized = (regional_data - regional_data.mean()) / regional_data.std()
-        
-        plt.figure(figsize=(12, 10))
-        sns.heatmap(regional_data_normalized, annot=True, fmt='.2f', cmap='YlOrRd', 
-                   linewidths=.5, cbar_kws={"shrink": .5})
+        plt.figure(figsize=(14, 10))
+        sns.heatmap(regional_data, annot=True, fmt=',.0f', cmap='YlOrRd', 
+                   linewidths=.5, cbar_kws={"shrink": .7}, annot_kws={"size": 9})
         
         plt.title(f'Regional Sales Heatmap by Brand ({metric})')
         plt.xlabel('Region')
@@ -96,9 +94,9 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_distribution(self, column='final_price', save_path=None):
         plt.figure(figsize=(10, 6))
@@ -112,16 +110,23 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
-    def plot_brand_market_share(self, save_path=None):
-        brand_revenue = self.df.groupby('brand')['revenue'].sum()
+    def plot_brand_market_share(self, top_n=8, save_path=None):
+        brand_revenue = self.df.groupby('brand')['revenue'].sum().sort_values(ascending=False)
         
-        plt.figure(figsize=(10, 10))
-        plt.pie(brand_revenue.values, labels=brand_revenue.index, autopct='%1.1f%%',
-               colors=self.color_palette, startangle=90)
+        if len(brand_revenue) > top_n:
+            top_brands = brand_revenue.head(top_n)
+            others_sum = brand_revenue.tail(len(brand_revenue) - top_n).sum()
+            top_brands['Others'] = others_sum
+            brand_revenue = top_brands
+        
+        plt.figure(figsize=(12, 10))
+        wedges, texts, autotexts = plt.pie(brand_revenue.values, labels=brand_revenue.index, 
+                                          autopct='%1.1f%%', colors=self.color_palette, 
+                                          startangle=90, textprops={'fontsize': 9})
         
         plt.title('Market Share by Brand')
         plt.axis('equal')
@@ -129,9 +134,9 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_quantity_vs_price(self, save_path=None):
         plt.figure(figsize=(10, 8))
@@ -150,9 +155,9 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_monthly_performance(self, save_path=None):
         df = self.df.copy()
@@ -187,9 +192,9 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_top_salespersons(self, top_n=20, metric='revenue', save_path=None):
         salesperson_data = self.df.groupby('salesperson_id')[metric].sum().sort_values(ascending=False)
@@ -210,9 +215,9 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def plot_correlation_matrix(self, save_path=None):
         numeric_cols = self.df.select_dtypes(include=[np.number]).columns
@@ -228,9 +233,9 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()
     
     def create_dashboard(self, save_path=None):
         fig = plt.figure(figsize=(20, 16))
@@ -276,6 +281,6 @@ class SalesVisualizer:
         plt.tight_layout()
         
         if save_path:
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
         
-        plt.show()
+        plt.close()

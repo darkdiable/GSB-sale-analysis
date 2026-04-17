@@ -18,7 +18,6 @@ class DataProcessor:
         self.sales_df['date'] = pd.to_datetime(self.sales_df['date'])
         
         self.sales_df['revenue'] = self.sales_df['quantity'] * self.sales_df['final_price']
-        self.sales_df.loc[self.sales_df['discount'] == 0, 'revenue'] = self.sales_df['quantity'] * self.sales_df['final_price'] * 1.1
         
         return self.sales_df
     
@@ -34,7 +33,7 @@ class DataProcessor:
             self.sales_df,
             self.customer_df,
             on='customer_id',
-            how='inner'
+            how='left'
         )
         
         if len(merged_df) == 0:
@@ -46,9 +45,13 @@ class DataProcessor:
         if self.dealer_df is None:
             return self.sales_df
         
-        self.sales_df['dealer_id'] = self.sales_df['region'].apply(
-            lambda x: f"DLR{self.dealer_df[self.dealer_df['region'] == x].iloc[0]['dealer_id'].replace('DLR', '')}"
-        )
+        def get_dealer_id(region):
+            matches = self.dealer_df[self.dealer_df['region'] == region]
+            if len(matches) > 0:
+                return f"DLR{matches.iloc[0]['dealer_id'].replace('DLR', '')}"
+            return None
+            
+        self.sales_df['dealer_id'] = self.sales_df['region'].apply(get_dealer_id)
         
         merged_df = pd.merge(
             self.sales_df,
@@ -65,7 +68,8 @@ class DataProcessor:
         else:
             df = df.copy()
         
-        df['date'] = pd.to_datetime(df['date'])
+        if not pd.api.types.is_datetime64_any_dtype(df['date']):
+            df['date'] = pd.to_datetime(df['date'])
         
         df['year'] = df['date'].dt.year
         df['month'] = df['date'].dt.month
