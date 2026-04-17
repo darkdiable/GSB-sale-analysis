@@ -34,7 +34,7 @@ class DataAnalyzer:
             (1 - brand_analysis['discount_mean'].rank(pct=True)) * 0.25
         ) * 100
         
-        return brand_analysis.sort_values('performance_score', ascending=True)
+        return brand_analysis.sort_values('performance_score', ascending=False)
     
     def regional_analysis(self):
         regional_stats = self.df.groupby('region').agg({
@@ -118,6 +118,8 @@ class DataAnalyzer:
                 'r_squared': 0,
                 'confidence_level': 'low',
                 'statistically_significant': False,
+                'p_value': None,
+                'data_points': len(df),
                 'data_with_trends': df
             }
         
@@ -127,14 +129,38 @@ class DataAnalyzer:
         trend_slope = model.coef_[0]
         r_squared = model.score(X, y)
         
-        confidence = 'high' if r_squared > 0.7 else 'medium' if r_squared > 0.4 else 'low'
+        y_pred = model.predict(X)
+        residuals = y - y_pred
+        n = len(X)
+        p = 1
+        
+        mse = np.sum(residuals ** 2) / (n - p - 1)
+        X_with_intercept = np.column_stack([np.ones(n), X.flatten()])
+        try:
+            var_coef = mse * np.linalg.inv(X_with_intercept.T @ X_with_intercept)
+            se_slope = np.sqrt(var_coef[1, 1])
+            t_stat = trend_slope / se_slope if se_slope > 0 else 0
+            p_value = 2 * (1 - stats.t.cdf(abs(t_stat), n - p - 1))
+        except:
+            p_value = 1.0
+        
+        is_significant = p_value < 0.05 and r_squared > 0.3
+        
+        if r_squared > 0.7 and p_value < 0.01:
+            confidence = 'high'
+        elif r_squared > 0.4 and p_value < 0.05:
+            confidence = 'medium'
+        else:
+            confidence = 'low'
         
         return {
             'trend_direction': trend_direction,
             'trend_slope': round(trend_slope, 2),
             'r_squared': round(r_squared, 4),
             'confidence_level': confidence,
-            'statistically_significant': r_squared > 0.3,
+            'statistically_significant': is_significant,
+            'p_value': round(p_value, 4) if p_value is not None else None,
+            'data_points': len(df),
             'data_with_trends': df
         }
     
@@ -148,11 +174,8 @@ class DataAnalyzer:
         features['brand_encoded'] = brand_encoded
         features['region_encoded'] = region_encoded
         
-        np.random.seed(42)
-        init_centers = features.sample(n=n_clusters, random_state=123).values
-        
-        kmeans = KMeans(n_clusters=n_clusters, init=init_centers, n_init=1, 
-                       max_iter=300, random_state=None)
+        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init=10, 
+                       max_iter=300, random_state=42)
         
         df['segment'] = kmeans.fit_predict(features)
         
