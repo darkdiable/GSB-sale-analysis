@@ -60,14 +60,33 @@ class SalesVisualizer:
         
         plt.figure(figsize=(14, 7))
         
-        plt.plot(time_data.index.astype(str), time_data.values, marker='o', linewidth=2)
+        # 转换period为datetime以便更好地格式化x轴
+        time_data.index = time_data.index.to_timestamp()
+        
+        plt.plot(time_data.index, time_data.values, marker='o', linewidth=2)
         
         plt.xlabel('Period')
         plt.ylabel(f'Total {metric}')
         plt.title(f'{metric} Trend Over Time')
-        plt.xticks(rotation=45)
-        plt.grid(True, alpha=0.3)
         
+        # 优化x轴标签显示
+        n_points = len(time_data)
+        if n_points > 12:
+            step = max(1, n_points // 12)
+            plt.xticks(time_data.index[::step], rotation=45)
+        else:
+            plt.xticks(rotation=45)
+        
+        # 格式化x轴日期
+        import matplotlib.dates as mdates
+        if freq == 'M':
+            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+        elif freq == 'Q':
+            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-Q%q'))
+        elif freq == 'W':
+            plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        
+        plt.grid(True, alpha=0.3)
         plt.tight_layout()
         
         if save_path:
@@ -83,7 +102,14 @@ class SalesVisualizer:
             aggfunc='sum'
         )
         
-        regional_data_normalized = (regional_data - regional_data.mean()) / regional_data.std()
+        # 填充缺失值为0，避免标准化时出现问题
+        regional_data = regional_data.fillna(0)
+        
+        # 只在有数据的情况下进行标准化
+        if regional_data.std().sum() > 0:
+            regional_data_normalized = (regional_data - regional_data.mean()) / regional_data.std()
+        else:
+            regional_data_normalized = regional_data
         
         plt.figure(figsize=(12, 10))
         sns.heatmap(regional_data_normalized, annot=True, fmt='.2f', cmap='YlOrRd', 

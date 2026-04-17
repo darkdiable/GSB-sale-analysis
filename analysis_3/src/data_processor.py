@@ -17,8 +17,8 @@ class DataProcessor:
         
         self.sales_df['date'] = pd.to_datetime(self.sales_df['date'])
         
+        # 使用正确的收入计算公式：quantity * final_price (final_price已经是折扣后的价格)
         self.sales_df['revenue'] = self.sales_df['quantity'] * self.sales_df['final_price']
-        self.sales_df.loc[self.sales_df['discount'] == 0, 'revenue'] = self.sales_df['quantity'] * self.sales_df['final_price'] * 1.1
         
         return self.sales_df
     
@@ -26,15 +26,21 @@ class DataProcessor:
         if self.customer_df is None:
             return self.sales_df
         
-        self.sales_df['customer_id'] = self.sales_df['salesperson_id'].apply(
-            lambda x: f"CUST{x.split('SP')[1]}" if 'SP' in x else f"CUST{x}"
-        )
+        # 从salesperson_id正确提取数字部分并格式化为customer_id
+        def extract_customer_id(sp_id):
+            if 'SP' in str(sp_id):
+                num = str(sp_id).split('SP')[1]
+                return f"CUST{int(num):05d}"
+            else:
+                return f"CUST{int(sp_id):05d}"
+        
+        self.sales_df['customer_id'] = self.sales_df['salesperson_id'].apply(extract_customer_id)
         
         merged_df = pd.merge(
             self.sales_df,
             self.customer_df,
             on='customer_id',
-            how='inner'
+            how='left'  # 使用left join避免数据丢失
         )
         
         if len(merged_df) == 0:
@@ -46,15 +52,19 @@ class DataProcessor:
         if self.dealer_df is None:
             return self.sales_df
         
+        # 根据region匹配dealer_id，每个region可能有多个dealer，取第一个
+        region_to_dealer = self.dealer_df.groupby('region')['dealer_id'].first().to_dict()
+        
         self.sales_df['dealer_id'] = self.sales_df['region'].apply(
-            lambda x: f"DLR{self.dealer_df[self.dealer_df['region'] == x].iloc[0]['dealer_id'].replace('DLR', '')}"
+            lambda x: region_to_dealer.get(x, f"DLR{hash(x) % 100:03d}")
         )
         
         merged_df = pd.merge(
             self.sales_df,
             self.dealer_df,
             on='dealer_id',
-            how='left'
+            how='left',
+            suffixes=('', '_dealer')
         )
         
         return merged_df
