@@ -103,11 +103,15 @@ class DataAnalyzer:
         
         df['cumulative_' + column] = df[column].cumsum()
         
-        df['rolling_avg_7'] = df[column].rolling(window=7, min_periods=0).mean()
-        df['rolling_avg_30'] = df[column].rolling(window=30, min_periods=0).mean()
+        df['rolling_avg_7'] = df[column].rolling(window=7, min_periods=1).mean()
+        df['rolling_avg_30'] = df[column].rolling(window=30, min_periods=1).mean()
         
-        X = np.arange(len(df)).reshape(-1, 1)
-        y = df[column].values
+        # 按日期聚合数据，避免同一天多条记录影响趋势分析
+        daily_data = df.groupby('date')[column].sum().reset_index()
+        daily_data = daily_data.sort_values('date')
+        
+        X = np.arange(len(daily_data)).reshape(-1, 1)
+        y = daily_data[column].values
         
         model = LinearRegression()
         
@@ -118,23 +122,59 @@ class DataAnalyzer:
                 'r_squared': 0,
                 'confidence_level': 'low',
                 'statistically_significant': False,
+                'p_value': 1.0,
                 'data_with_trends': df
             }
         
         model.fit(X, y)
         
-        trend_direction = 'increasing' if model.coef_[0] > 0.001 else 'decreasing' if model.coef_[0] < -0.001 else 'stable'
+        # 计算t统计量和p值
+        n = len(X)
+        y_pred = model.predict(X)
+        mse = np.sum((y - y_pred) ** 2) / (n - 2) if n > 2 else 0
+        x_mean = np.mean(X)
+        ss_x = np.sum((X.flatten() - x_mean) ** 2)
+        
+        if mse > 0 and ss_x > 0:
+            se_slope = np.sqrt(mse / ss_x)
+            t_stat = model.coef_[0] / se_slope if se_slope > 0 else 0
+            # 使用t分布计算p值（简化计算）
+            from scipy import stats as scipy_stats
+            p_value = 2 * (1 - scipy_stats.t.cdf(abs(t_stat), n - 2)) if n > 2 else 1.0
+        else:
+            p_value = 1.0
+        
         trend_slope = model.coef_[0]
+        # 根据斜率相对于数据均值的比例来判断趋势方向
+        mean_value = np.mean(y)
+        relative_slope = trend_slope / mean_value if mean_value > 0 else 0
+        
+        trend_direction = 'increasing' if relative_slope > 0.01 else 'decreasing' if relative_slope < -0.01 else 'stable'
         r_squared = model.score(X, y)
         
-        confidence = 'high' if r_squared > 0.7 else 'medium' if r_squared > 0.4 else 'low'
+        # 综合考虑R²和p值来判断可信度
+        # 高可信度：R² > 0.7 且 p < 0.05
+        # 中等可信度：R² > 0.4 且 p < 0.1
+        # 低可信度：其他情况
+        if r_squared > 0.7 and p_value < 0.05:
+            confidence = 'high'
+        elif r_squared > 0.4 and p_value < 0.1:
+            confidence = 'medium'
+        else:
+            confidence = 'low'
+        
+        # 统计显著性：R² > 0.3 且 p < 0.05
+        is_significant = r_squared > 0.3 and p_value < 0.05
         
         return {
             'trend_direction': trend_direction,
             'trend_slope': round(trend_slope, 2),
+            'relative_slope': round(relative_slope, 4),
             'r_squared': round(r_squared, 4),
+            'p_value': round(p_value, 4),
             'confidence_level': confidence,
-            'statistically_significant': r_squared > 0.3,
+            'statistically_significant': is_significant,
+            'sample_size': n,
             'data_with_trends': df
         }
     
@@ -148,11 +188,12 @@ class DataAnalyzer:
         features['brand_encoded'] = brand_encoded
         features['region_encoded'] = region_encoded
         
+        # 使用固定的random_state确保结果稳定
         np.random.seed(42)
-        init_centers = features.sample(n=n_clusters, random_state=123).values
         
-        kmeans = KMeans(n_clusters=n_clusters, init=init_centers, n_init=1, 
-                       max_iter=300, random_state=None)
+        # 使用k-means++初始化，设置固定的random_state
+        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init=10, 
+                       max_iter=300, random_state=42)
         
         df['segment'] = kmeans.fit_predict(features)
         
