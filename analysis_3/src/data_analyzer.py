@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.cluster import KMeans
 from scipy import stats
 
@@ -17,7 +17,7 @@ class DataAnalyzer:
             'revenue': ['sum', 'mean', 'std'],
             'discount': ['mean', 'min', 'max'],
             'final_price': ['mean', 'min', 'max']
-        }).round(2)
+        })
         
         brand_analysis.columns = ['_'.join(col).strip() for col in brand_analysis.columns]
         brand_analysis = brand_analysis.reset_index()
@@ -29,10 +29,10 @@ class DataAnalyzer:
         brand_analysis['performance_score'] = (
             brand_analysis['revenue_sum'].rank(pct=True) * 0.4 +
             brand_analysis['quantity_sum'].rank(pct=True) * 0.3 +
-            brand_analysis['discount_mean'].rank(pct=True) * 0.3
+            (1 - brand_analysis['discount_mean'].rank(pct=True)) * 0.3
         ) * 100
         
-        return brand_analysis.sort_values('performance_score', ascending=True)
+        return brand_analysis.sort_values('performance_score', ascending=False)
     
     def regional_analysis(self):
         regional_stats = self.df.groupby('region').agg({
@@ -72,8 +72,8 @@ class DataAnalyzer:
         })
         
         temporal_stats['growth_rate'] = temporal_stats['revenue'].pct_change() * 100
-        temporal_stats['moving_avg_3'] = temporal_stats['revenue'].rolling(window=3, min_periods=1).mean()
-        temporal_stats['moving_avg_6'] = temporal_stats['revenue'].rolling(window=6, min_periods=1).mean()
+        temporal_stats['moving_avg_3'] = temporal_stats['revenue'].rolling(window=3).mean()
+        temporal_stats['moving_avg_6'] = temporal_stats['revenue'].rolling(window=6).mean()
         
         return temporal_stats.reset_index()
     
@@ -122,22 +122,25 @@ class DataAnalyzer:
     def segmentation_analysis(self, n_clusters=5):
         df = self.df.copy()
         
-        brand_encoded = self._encode_column('brand')
-        region_encoded = self._encode_column('region')
+        features = df[['quantity', 'final_price', 'discount']].copy()
         
-        features = df[['quantity', 'final_price', 'discount', 'revenue']].copy()
-        features['brand_encoded'] = brand_encoded
-        features['region_encoded'] = region_encoded
+        scaler = StandardScaler()
+        features_scaled = scaler.fit_transform(features)
         
         kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
-        df['segment'] = kmeans.fit_predict(features)
+        df['segment'] = kmeans.fit_predict(features_scaled)
         
         segment_profile = df.groupby('segment').agg({
             'quantity': ['mean', 'std'],
             'revenue': ['mean', 'std'],
-            'discount': 'mean',
-            'brand': lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else 'N/A'
+            'final_price': ['mean', 'std'],
+            'discount': ['mean', 'std'],
+            'brand': lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else 'N/A',
+            'region': lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else 'N/A'
         })
+        
+        segment_profile.columns = ['_'.join(col).strip() for col in segment_profile.columns]
+        segment_profile = segment_profile.reset_index()
         
         return df, segment_profile
     

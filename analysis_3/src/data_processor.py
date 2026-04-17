@@ -77,9 +77,9 @@ class DataProcessor:
             df = self.sales_df
         
         metrics = {
-            'total_revenue': df['revenue'].sum() / 1000,
+            'total_revenue': df['revenue'].sum(),
             'total_quantity': df['quantity'].sum(),
-            'avg_discount': df['discount'].mean() * 100,
+            'avg_discount': df['discount'].mean(),
             'avg_price': df['final_price'].mean(),
             'max_sale': df['revenue'].max(),
             'min_sale': df['revenue'].min()
