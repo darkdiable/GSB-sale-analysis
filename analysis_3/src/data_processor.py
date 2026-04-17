@@ -77,9 +77,9 @@ class DataProcessor:
             df = self.sales_df
         
         metrics = {
-            'total_revenue': df['revenue'].sum(),
+            'total_revenue': df['revenue'].sum() / 1000,
             'total_quantity': df['quantity'].sum(),
-            'avg_discount': df['discount'].mean(),
+            'avg_discount': df['discount'].mean() * 100,
             'avg_price': df['final_price'].mean(),
             'max_sale': df['revenue'].max(),
             'min_sale': df['revenue'].min()
@@ -98,7 +98,7 @@ class DataProcessor:
             'final_price': ['mean', 'std']
         })
         
-        brand_stats.columns = ['_'.join(col).strip() for col in brand_stats.columns.values]
+        brand_stats.columns = ['_'.join(col).strip() for col in brand_stats.columns]
         brand_stats = brand_stats.reset_index()
         
         brand_stats['market_share'] = brand_stats['revenue_sum'] / brand_stats['revenue_sum'].sum() * 100

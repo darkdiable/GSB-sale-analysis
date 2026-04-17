@@ -3,7 +3,6 @@ import sys
 from datetime import datetime
 import pandas as pd
 
-from src.data_generator import CarSalesDataGenerator
 from src.data_processor import DataProcessor
 from src.data_analyzer import DataAnalyzer
 from src.visualizer import SalesVisualizer
@@ -19,6 +18,15 @@ def main():
     
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(data_dir, exist_ok=True)
+    
+    print("\nLoading data files...")
+    sales_df = pd.read_csv('data/sales_data.csv')
+    customer_df = pd.read_csv('data/customer_data.csv')
+    dealer_df = pd.read_csv('data/dealer_data.csv')
+    
+    print(f"Loaded {len(sales_df)} sales records")
+    print(f"Loaded {len(customer_df)} customer records")
+    print(f"Loaded {len(dealer_df)} dealer records")
     
     print("\n[1/6] Processing data...")
     processor = DataProcessor(sales_df, customer_df, dealer_df)
@@ -129,16 +137,14 @@ def generate_summary_report(metrics, brand_stats, region_stats, output_dir):
     report.append("TOP 5 BRANDS BY PERFORMANCE")
     report.append("-" * 40)
     for idx, row in brand_stats.head(5).iterrows():
-        report.append(f"{row['brand']}: Score={row['performance_score']:.2f}, "
-                     f"Revenue=${row['revenue_sum']:,.2f}, "
+        report.append(f"{row['brand']}: Revenue=${row['revenue_sum']:,.2f}, "
                      f"Market Share={row['market_share']:.2f}%")
     report.append("")
     
     report.append("REGIONAL PERFORMANCE")
     report.append("-" * 40)
     for idx, row in region_stats.iterrows():
-        report.append(f"{row['region']}: Revenue=${row['revenue_sum']:,.2f}, "
-                     f"Contribution={row['revenue_contribution']:.2f}%")
+        report.append(f"{row['region']}: Revenue=${row['revenue_sum']:,.2f}")
     report.append("")
     
     report.append("=" * 60)
