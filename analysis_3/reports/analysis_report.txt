@@ -1,13 +1,13 @@
 ============================================================
 CAR BRAND SALES ANALYSIS REPORT
-Generated: 2026-04-17 09:17:05
+Generated: 2026-04-17 10:10:41
 ============================================================
 
 KEY METRICS
 ----------------------------------------
-Total Revenue: $7,642,953.29
+Total Revenue: $7,642,953,287.51
 Total Quantity Sold: 251,154
-Average Discount: 1008.73%
+Average Discount: 10.09%
 Average Price: $30,487.26
 Max Sale: $3,195,805.71
 Min Sale: $16,856.99

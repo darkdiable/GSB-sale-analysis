@@ -55,6 +55,7 @@ def main():
     print(brand_performance.head(10))
     
     regional_analysis = analyzer.regional_analysis()
+    regional_analysis = processor.aggregate_by_region(df_with_features)
     print("\nRegional Analysis:")
     print(regional_analysis)
     
@@ -107,6 +108,7 @@ def main():
     visualizer.create_dashboard(save_path=f"{output_dir}/full_dashboard.png")
     
     print("\n[4/6] Generating summary report...")
+    region_stats = processor.aggregate_by_region(df_with_features)
     generate_summary_report(metrics, brand_stats, region_stats, output_dir)
     
     print("\n[5/6] Analysis complete!")

@@ -5,9 +5,9 @@ from datetime import datetime
 
 class DataProcessor:
     def __init__(self, sales_df, customer_df=None, dealer_df=None):
-        self.sales_df = sales_df
-        self.customer_df = customer_df if customer_df is not None else None
-        self.dealer_df = dealer_df if dealer_df is not None else None
+        self.sales_df = sales_df.copy()
+        self.customer_df = customer_df.copy() if customer_df is not None else None
+        self.dealer_df = dealer_df.copy() if dealer_df is not None else None
         
     def clean_data(self):
         self.sales_df = self.sales_df.drop_duplicates()
@@ -79,9 +79,9 @@ class DataProcessor:
             df = self.sales_df
         
         metrics = {
-            'total_revenue': df['revenue'].sum() / 1000,
+            'total_revenue': df['revenue'].sum(),
             'total_quantity': df['quantity'].sum(),
-            'avg_discount': df['discount'].mean() * 100,
+            'avg_discount': df['discount'].mean(),
             'avg_price': df['final_price'].mean(),
             'max_sale': df['revenue'].max(),
             'min_sale': df['revenue'].min()
@@ -103,7 +103,7 @@ class DataProcessor:
         brand_stats.columns = ['_'.join(col).strip() for col in brand_stats.columns]
         brand_stats = brand_stats.reset_index()
         
-        brand_stats['market_share'] = brand_stats['revenue_sum'] / brand_stats['revenue_sum'].sum() * 100
+        brand_stats['market_share'] = brand_stats['revenue_sum'] / df['revenue'].sum() * 100
         
         return brand_stats
     

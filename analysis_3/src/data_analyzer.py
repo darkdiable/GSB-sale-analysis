@@ -29,10 +29,10 @@ class DataAnalyzer:
         brand_analysis['performance_score'] = (
             brand_analysis['revenue_sum'].rank(pct=True) * 0.4 +
             brand_analysis['quantity_sum'].rank(pct=True) * 0.3 +
-            brand_analysis['discount_mean'].rank(pct=True) * 0.3
+            (1 - brand_analysis['discount_mean'].rank(pct=True)) * 0.3
         ) * 100
         
-        return brand_analysis.sort_values('performance_score', ascending=True)
+        return brand_analysis.sort_values('performance_score', ascending=False)
     
     def regional_analysis(self):
         regional_stats = self.df.groupby('region').agg({
@@ -169,7 +169,7 @@ class DataAnalyzer:
         
         salesperson_stats['efficiency_score'] = (
             salesperson_stats['total_revenue'] / salesperson_stats['sales_count']
-        ) / salesperson_stats['avg_discount']
+        ) * salesperson_stats['avg_discount']
         
         return salesperson_stats.sort_values('performance_rank')
     
