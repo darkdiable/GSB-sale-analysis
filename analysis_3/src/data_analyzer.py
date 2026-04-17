@@ -31,10 +31,10 @@ class DataAnalyzer:
         brand_analysis['performance_score'] = (
             brand_analysis['revenue_sum'].rank(pct=True) * 0.45 +
             brand_analysis['quantity_sum'].rank(pct=True) * 0.35 +
-            (1 - brand_analysis['discount_mean'].rank(pct=True)) * 0.25
+            (1 - brand_analysis['discount_mean'].rank(pct=True)) * 0.20
         ) * 100
         
-        return brand_analysis.sort_values('performance_score', ascending=True)
+        return brand_analysis.sort_values('performance_score', ascending=False)
     
     def regional_analysis(self):
         regional_stats = self.df.groupby('region').agg({
@@ -123,18 +123,44 @@ class DataAnalyzer:
         
         model.fit(X, y)
         
-        trend_direction = 'increasing' if model.coef_[0] > 0.001 else 'decreasing' if model.coef_[0] < -0.001 else 'stable'
         trend_slope = model.coef_[0]
         r_squared = model.score(X, y)
         
-        confidence = 'high' if r_squared > 0.7 else 'medium' if r_squared > 0.4 else 'low'
+        if trend_slope > 100:
+            trend_direction = 'strongly increasing'
+        elif trend_slope > 0.001:
+            trend_direction = 'moderately increasing'
+        elif trend_slope < -100:
+            trend_direction = 'strongly decreasing'
+        elif trend_slope < -0.001:
+            trend_direction = 'moderately decreasing'
+        else:
+            trend_direction = 'stable'
+        
+        n = len(y)
+        p_value = 1 - stats.f.cdf(r_squared * (n - 2) / (1 - r_squared), 1, n - 2)
+        
+        if r_squared > 0.7 and p_value < 0.01:
+            confidence = 'very high'
+        elif r_squared > 0.5 and p_value < 0.05:
+            confidence = 'high'
+        elif r_squared > 0.3 and p_value < 0.1:
+            confidence = 'medium'
+        else:
+            confidence = 'low'
         
         return {
             'trend_direction': trend_direction,
             'trend_slope': round(trend_slope, 2),
             'r_squared': round(r_squared, 4),
+            'p_value': round(p_value, 4),
             'confidence_level': confidence,
-            'statistically_significant': r_squared > 0.3,
+            'statistically_significant': p_value < 0.05,
+            'confidence_criteria': {
+                'r_squared_threshold': f'r_squared > 0.5 for high confidence',
+                'p_value_threshold': 'p_value < 0.05 for statistical significance',
+                'sample_size': n
+            },
             'data_with_trends': df
         }
     
@@ -149,10 +175,10 @@ class DataAnalyzer:
         features['region_encoded'] = region_encoded
         
         np.random.seed(42)
-        init_centers = features.sample(n=n_clusters, random_state=123).values
+        init_centers = features.sample(n=n_clusters, random_state=42).values
         
         kmeans = KMeans(n_clusters=n_clusters, init=init_centers, n_init=1, 
-                       max_iter=300, random_state=None)
+                       max_iter=300, random_state=42)
         
         df['segment'] = kmeans.fit_predict(features)
         

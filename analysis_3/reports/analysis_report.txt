@@ -1,11 +1,11 @@
 ============================================================
 CAR BRAND SALES ANALYSIS REPORT
-Generated: 2026-04-17 11:01:22
+Generated: 2026-04-17 11:28:37
 ============================================================
 
 KEY METRICS
 ----------------------------------------
-Total Revenue: $7,643,312,766.88
+Total Revenue: $7,642,953,290.88
 Total Quantity Sold: 251,154
 Average Discount: 10.09%
 Average Price: $30,487.26
@@ -15,15 +15,15 @@ Min Sale: $16,856.99
 TOP 5 BRANDS BY PERFORMANCE
 ----------------------------------------
 Audi: Revenue=$1,086,039,053.16, Market Share=14.21%
-BMW: Revenue=$1,277,083,038.44, Market Share=16.71%
+Honda: Revenue=$621,754,919.19, Market Share=8.14%
+Volkswagen: Revenue=$695,134,373.49, Market Share=9.10%
 Ford: Revenue=$687,739,308.39, Market Share=9.00%
-Honda: Revenue=$621,754,919.19, Market Share=8.13%
-Hyundai: Revenue=$507,887,660.30, Market Share=6.64%
+BMW: Revenue=$1,277,083,038.44, Market Share=16.71%
 
 REGIONAL PERFORMANCE
 ----------------------------------------
 Central: Revenue=$1,546,127,904.59
-East: Revenue=$1,567,854,706.01
+East: Revenue=$1,567,495,230.01
 North: Revenue=$1,476,913,755.51
 South: Revenue=$1,466,708,599.78
 West: Revenue=$1,585,707,800.99
