@@ -18,17 +18,19 @@ class SalesVisualizer:
             brand_data = brand_data.head(top_n)
         
         plt.figure(figsize=(14, 7))
-        bars = plt.bar(range(len(brand_data)), brand_data.values, color=self.color_palette[:len(brand_data)])
+        
+        bars = plt.bar(range(len(brand_data)), brand_data.values, 
+                      color=self.color_palette[:len(brand_data)])
         
         plt.xticks(range(len(brand_data)), brand_data.index, rotation=45)
         plt.xlabel('Brand')
         plt.ylabel(f'Total {metric}')
         plt.title(f'Top {top_n} Brands by {metric}')
         
-        for bar in bars:
+        for i, bar in enumerate(bars):
             height = bar.get_height()
-            plt.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{height:,.0f}', ha='center', va='bottom')
+            plt.text(bar.get_x() + bar.get_width()/2., height + height * 0.05,
+                    f'{height:,.0f}', ha='center', va='bottom', fontsize=8)
         
         plt.tight_layout()
         
@@ -47,10 +49,17 @@ class SalesVisualizer:
             df['period'] = df['date'].dt.to_period('W')
         elif freq == 'Q':
             df['period'] = df['date'].dt.to_period('Q')
+        else:
+            df['period'] = df['date'].dt.date
         
         time_data = df.groupby('period')[metric].sum()
         
+        if len(time_data) == 0:
+            print(f"Warning: No data available for {metric} with frequency {freq}")
+            return
+        
         plt.figure(figsize=(14, 7))
+        
         plt.plot(time_data.index.astype(str), time_data.values, marker='o', linewidth=2)
         
         plt.xlabel('Period')

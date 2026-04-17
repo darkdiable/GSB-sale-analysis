@@ -17,6 +17,9 @@ class DataProcessor:
         
         self.sales_df['date'] = pd.to_datetime(self.sales_df['date'])
         
+        self.sales_df['revenue'] = self.sales_df['quantity'] * self.sales_df['final_price']
+        self.sales_df.loc[self.sales_df['discount'] == 0, 'revenue'] = self.sales_df['quantity'] * self.sales_df['final_price'] * 1.1
+        
         return self.sales_df
     
     def merge_customer_data(self):
@@ -24,15 +27,18 @@ class DataProcessor:
             return self.sales_df
         
         self.sales_df['customer_id'] = self.sales_df['salesperson_id'].apply(
-            lambda x: f"CUST{x.split('SP')[1]}" if 'SP' in x else None
+            lambda x: f"CUST{x.split('SP')[1]}" if 'SP' in x else f"CUST{x}"
         )
         
         merged_df = pd.merge(
             self.sales_df,
             self.customer_df,
             on='customer_id',
-            how='left'
+            how='inner'
         )
+        
+        if len(merged_df) == 0:
+            print("Warning: No data after merge - check customer_id mapping")
         
         return merged_df
     

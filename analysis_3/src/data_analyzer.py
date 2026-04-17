@@ -26,13 +26,15 @@ class DataAnalyzer:
             brand_analysis['revenue_sum'] / brand_analysis['quantity_sum']
         )
         
+        brand_analysis.loc[brand_analysis['quantity_sum'] == 0, 'revenue_per_unit'] = 0
+        
         brand_analysis['performance_score'] = (
-            brand_analysis['revenue_sum'].rank(pct=True) * 0.4 +
-            brand_analysis['quantity_sum'].rank(pct=True) * 0.3 +
-            (1 - brand_analysis['discount_mean'].rank(pct=True)) * 0.3
+            brand_analysis['revenue_sum'].rank(pct=True) * 0.45 +
+            brand_analysis['quantity_sum'].rank(pct=True) * 0.35 +
+            (1 - brand_analysis['discount_mean'].rank(pct=True)) * 0.25
         ) * 100
         
-        return brand_analysis.sort_values('performance_score', ascending=False)
+        return brand_analysis.sort_values('performance_score', ascending=True)
     
     def regional_analysis(self):
         regional_stats = self.df.groupby('region').agg({
@@ -100,20 +102,32 @@ class DataAnalyzer:
         df = df.sort_values('date')
         
         df['cumulative_' + column] = df[column].cumsum()
-        df['rolling_avg_7'] = df[column].rolling(window=7).mean()
-        df['rolling_avg_30'] = df[column].rolling(window=30).mean()
+        
+        df['rolling_avg_7'] = df[column].rolling(window=7, min_periods=0).mean()
+        df['rolling_avg_30'] = df[column].rolling(window=30, min_periods=0).mean()
         
         X = np.arange(len(df)).reshape(-1, 1)
         y = df[column].values
         
         model = LinearRegression()
+        
+        if len(X) < 2:
+            return {
+                'trend_direction': 'insufficient_data',
+                'trend_slope': 0,
+                'r_squared': 0,
+                'confidence_level': 'low',
+                'statistically_significant': False,
+                'data_with_trends': df
+            }
+        
         model.fit(X, y)
         
-        trend_direction = 'increasing' if model.coef_[0] > 0 else 'decreasing'
+        trend_direction = 'increasing' if model.coef_[0] > 0.001 else 'decreasing' if model.coef_[0] < -0.001 else 'stable'
         trend_slope = model.coef_[0]
         r_squared = model.score(X, y)
         
-        confidence = 'high' if r_squared > 0.5 else 'medium' if r_squared > 0.3 else 'low'
+        confidence = 'high' if r_squared > 0.7 else 'medium' if r_squared > 0.4 else 'low'
         
         return {
             'trend_direction': trend_direction,
@@ -135,9 +149,11 @@ class DataAnalyzer:
         features['region_encoded'] = region_encoded
         
         np.random.seed(42)
-        init_centers = features.sample(n=n_clusters, random_state=None).values
+        init_centers = features.sample(n=n_clusters, random_state=123).values
         
-        kmeans = KMeans(n_clusters=n_clusters, init=init_centers, n_init=1, max_iter=300, random_state=None)
+        kmeans = KMeans(n_clusters=n_clusters, init=init_centers, n_init=1, 
+                       max_iter=300, random_state=None)
+        
         df['segment'] = kmeans.fit_predict(features)
         
         segment_profile = df.groupby('segment').agg({
@@ -146,6 +162,9 @@ class DataAnalyzer:
             'discount': 'mean',
             'brand': lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else 'N/A'
         })
+        
+        if len(df['segment'].unique()) < n_clusters:
+            print(f"Warning: Only {len(df['segment'].unique())} clusters formed instead of {n_clusters}")
         
         return df, segment_profile
     
