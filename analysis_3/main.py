@@ -70,6 +70,9 @@ def main():
     print(f"\nTrend Analysis: {trend_result['trend_direction']}")
     print(f"Trend Slope: {trend_result['trend_slope']}")
     print(f"R-squared: {trend_result['r_squared']}")
+    print(f"P-value: {trend_result['p_value']}")
+    print(f"Confidence Level: {trend_result['confidence_level']}")
+    print(f"Statistically Significant: {trend_result['statistically_significant']}")
     
     segmented_df, segment_profile = analyzer.segmentation_analysis(n_clusters=5)
     print("\nCustomer Segmentation Profile:")

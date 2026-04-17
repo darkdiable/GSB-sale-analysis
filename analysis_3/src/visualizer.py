@@ -80,10 +80,12 @@ class SalesVisualizer:
             values=metric, 
             index='brand', 
             columns='region', 
-            aggfunc='sum'
+            aggfunc='sum',
+            fill_value=0
         )
         
         regional_data_normalized = (regional_data - regional_data.mean()) / regional_data.std()
+        regional_data_normalized = regional_data_normalized.fillna(0)
         
         plt.figure(figsize=(12, 10))
         sns.heatmap(regional_data_normalized, annot=True, fmt='.2f', cmap='YlOrRd', 
@@ -116,12 +118,17 @@ class SalesVisualizer:
         
         plt.show()
     
-    def plot_brand_market_share(self, save_path=None):
-        brand_revenue = self.df.groupby('brand')['revenue'].sum()
+    def plot_brand_market_share(self, save_path=None, top_n=10):
+        brand_revenue = self.df.groupby('brand')['revenue'].sum().sort_values(ascending=False)
+        
+        if len(brand_revenue) > top_n:
+            top_brands = brand_revenue.head(top_n)
+            other_revenue = brand_revenue.iloc[top_n:].sum()
+            brand_revenue = pd.concat([top_brands, pd.Series({'Other': other_revenue})])
         
         plt.figure(figsize=(10, 10))
         plt.pie(brand_revenue.values, labels=brand_revenue.index, autopct='%1.1f%%',
-               colors=self.color_palette, startangle=90)
+               colors=self.color_palette[:len(brand_revenue)], startangle=90)
         
         plt.title('Market Share by Brand')
         plt.axis('equal')
@@ -252,7 +259,8 @@ class SalesVisualizer:
         
         ax3 = plt.subplot(2, 3, 3)
         regional_data = self.df.groupby('region')['revenue'].sum()
-        ax3.pie(regional_data.values, labels=regional_data.index, autopct='%1.1f%%')
+        ax3.pie(regional_data.values, labels=regional_data.index, autopct='%1.1f%%',
+               colors=self.color_palette[:len(regional_data)])
         ax3.set_title('Regional Revenue Distribution')
         
         ax4 = plt.subplot(2, 3, 4)

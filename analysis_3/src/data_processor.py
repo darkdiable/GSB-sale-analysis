@@ -17,8 +17,8 @@ class DataProcessor:
         
         self.sales_df['date'] = pd.to_datetime(self.sales_df['date'])
         
-        self.sales_df['revenue'] = self.sales_df['quantity'] * self.sales_df['final_price']
-        self.sales_df.loc[self.sales_df['discount'] == 0, 'revenue'] = self.sales_df['quantity'] * self.sales_df['final_price'] * 1.1
+        if 'revenue' not in self.sales_df.columns:
+            self.sales_df['revenue'] = self.sales_df['quantity'] * self.sales_df['final_price']
         
         return self.sales_df
     
@@ -26,15 +26,16 @@ class DataProcessor:
         if self.customer_df is None:
             return self.sales_df
         
-        self.sales_df['customer_id'] = self.sales_df['salesperson_id'].apply(
-            lambda x: f"CUST{x.split('SP')[1]}" if 'SP' in x else f"CUST{x}"
-        )
+        if 'customer_id' not in self.sales_df.columns:
+            self.sales_df['customer_id'] = self.sales_df['sale_id'].apply(
+                lambda x: f"CUST{str(x).replace('SALE', '').zfill(5)}"
+            )
         
         merged_df = pd.merge(
             self.sales_df,
             self.customer_df,
             on='customer_id',
-            how='inner'
+            how='left'
         )
         
         if len(merged_df) == 0:
@@ -46,9 +47,9 @@ class DataProcessor:
         if self.dealer_df is None:
             return self.sales_df
         
-        self.sales_df['dealer_id'] = self.sales_df['region'].apply(
-            lambda x: f"DLR{self.dealer_df[self.dealer_df['region'] == x].iloc[0]['dealer_id'].replace('DLR', '')}"
-        )
+        region_dealer_map = self.dealer_df.groupby('region')['dealer_id'].first().to_dict()
+        
+        self.sales_df['dealer_id'] = self.sales_df['region'].map(region_dealer_map)
         
         merged_df = pd.merge(
             self.sales_df,
@@ -124,7 +125,7 @@ class DataProcessor:
             'final_price': 'mean'
         })
         
-        region_stats.columns = ['_'.join(col).strip() for col in region_stats.columns.values]
+        region_stats.columns = ['_'.join(col).strip() for col in region_stats.columns]
         region_stats = region_stats.reset_index()
         
         return region_stats
