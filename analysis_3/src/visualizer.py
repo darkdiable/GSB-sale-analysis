@@ -18,7 +18,7 @@ class SalesVisualizer:
             brand_data = brand_data.head(top_n)
         
         plt.figure(figsize=(14, 7))
-        bars = plt.bar(range(len(brand_data)), brand_data.values, color=self.color_palette)
+        bars = plt.bar(range(len(brand_data)), brand_data.values, color=self.color_palette[:len(brand_data)])
         
         plt.xticks(range(len(brand_data)), brand_data.index, rotation=45)
         plt.xlabel('Brand')
@@ -109,12 +109,9 @@ class SalesVisualizer:
     
     def plot_brand_market_share(self, save_path=None):
         brand_revenue = self.df.groupby('brand')['revenue'].sum()
-        total_revenue = brand_revenue.sum()
-        
-        market_shares = brand_revenue / total_revenue * 100
         
         plt.figure(figsize=(10, 10))
-        plt.pie(market_shares.values, labels=brand_revenue.index, autopct='%1.1f%%',
+        plt.pie(brand_revenue.values, labels=brand_revenue.index, autopct='%1.1f%%',
                colors=self.color_palette, startangle=90)
         
         plt.title('Market Share by Brand')

@@ -169,7 +169,7 @@ class DataAnalyzer:
         
         salesperson_stats['efficiency_score'] = (
             salesperson_stats['total_revenue'] / salesperson_stats['sales_count']
-        ) * salesperson_stats['avg_discount']
+        ) / salesperson_stats['avg_discount']
         
         return salesperson_stats.sort_values('performance_rank')
     

@@ -103,7 +103,7 @@ class DataProcessor:
         brand_stats.columns = ['_'.join(col).strip() for col in brand_stats.columns]
         brand_stats = brand_stats.reset_index()
         
-        brand_stats['market_share'] = brand_stats['revenue_sum'] / df['revenue'].sum() * 100
+        brand_stats['market_share'] = brand_stats['revenue_sum'] / brand_stats['revenue_sum'].sum() * 100
         
         return brand_stats
     
